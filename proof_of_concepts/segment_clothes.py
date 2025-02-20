@@ -1,3 +1,10 @@
+"""
+This Python script is used to detect and segment the clothes and hair colour of a person using the device's webcam.
+The script uses the Hugging Face Transformers library to load the pre-trained model for detection and segmentation.
+The script uses the OpenCV library to capture the video feed from the device's webcam.
+The script uses the PIL library to convert the OpenCV frame to a PIL image for the model.
+"""
+
 import cv2
 import numpy as np
 from transformers import pipeline
