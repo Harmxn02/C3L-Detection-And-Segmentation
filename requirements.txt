@@ -4,3 +4,4 @@ transformers
 webcolors
 pillow
 ultralytics
+streamlit
