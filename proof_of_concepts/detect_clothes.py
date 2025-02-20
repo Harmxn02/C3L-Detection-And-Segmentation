@@ -1,11 +1,3 @@
-"""
-This Python script is used to detect the hair colour of a person using the device's webcam.
-The script uses the Hugging Face Transformers library to load the pre-trained model for clothing detection.
-The script uses the OpenCV library to capture the video feed from the device's webcam.
-The script uses the webcolors library to find the closest named color to the detected color.
-The script uses the PIL library to convert the OpenCV frame to a PIL image for the model.
-"""
-
 import cv2
 import numpy as np
 from transformers import pipeline
@@ -41,6 +33,8 @@ def detect_color(frame, x1, y1, x2, y2):
     median_color = np.median(roi_rgb.reshape(-1, 3), axis=0)
     return closest_color(tuple(map(int, median_color)))
 
+EXCLUDED_CLASSES = {"neckline", "sleeve", "glasses", "watch", "belt"}
+
 pipe = pipeline(
     "object-detection",
     model="valentinafeve/yolos-fashionpedia",
@@ -61,7 +55,7 @@ while True:
 
     pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     detections = pipe(pil_image)
-    detections = [d for d in detections if d["score"] > 0.85]
+    detections = [d for d in detections if d["score"] > 0.85 and d["label"] not in EXCLUDED_CLASSES]
 
     if detections:
         top_detection = max(detections, key=lambda d: d["score"])
