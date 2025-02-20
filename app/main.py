@@ -17,10 +17,12 @@ def display_frame(frame, detected_items, webcam_placeholder, log_placeholder):
     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     webcam_placeholder.image(frame_rgb, caption="Webcam Feed", use_container_width=True)
 
+    # Join the list of detected items into a single string
+    detected_items_text = "\n".join(detected_items)
+
     # Update the detected items log
-    log_placeholder.text("Detected Items:")
-    for item in detected_items:
-        log_placeholder.text(item)
+    log_placeholder.text(f"Detected Items:\n{detected_items_text}")
+
 
 def main():
     st.title("Hair & Clothing Color Detection")
