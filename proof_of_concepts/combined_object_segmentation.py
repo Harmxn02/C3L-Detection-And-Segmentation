@@ -1,6 +1,7 @@
 """
-This Python script is used to detect and segment the clothes and hair colour of a person using the device's webcam.
-The script uses the Hugging Face Transformers library to load the pre-trained model for detection and segmentation.
+This Python script is used to detect the hair colour of a person using the device's webcam.
+The script uses the Hugging Face Transformers library to load the pre-trained model for clothes segmentation.
+The script uses the Hugging Face Transformers library to load the pre-trained model for hair colour detection.
 The script uses the OpenCV library to capture the video feed from the device's webcam.
 The script uses the PIL library to convert the OpenCV frame to a PIL image for the model.
 """
@@ -38,10 +39,17 @@ def detect_color(frame, mask):
 # Excluded classes from detection
 EXCLUDED_CLASSES = {"Background"}
 
-# Define segmentation pipeline
-pipe = pipeline(
+# Define segmentation pipeline (for clothes & hair)
+segmentation_pipe = pipeline(
     "image-segmentation",
     model="mattmdjaga/segformer_b2_clothes",
+    device=0  # Use GPU 0
+)
+
+# Define hair color classification pipeline
+hair_color_pipe = pipeline(
+    "image-classification",
+    model="enzostvs/hair-color",
     device=0  # Use GPU 0
 )
 
@@ -58,7 +66,7 @@ while True:
         break
 
     pil_image = Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-    results = pipe(pil_image)
+    results = segmentation_pipe(pil_image)
     
     detected_items = []
     
@@ -71,12 +79,17 @@ while True:
             continue
         
         mask = np.array(result['mask'])
-        color_name = detect_color(frame, mask)
 
-        # Assign a random color for the mask
+        if label == "Hair":
+            # Use hair classification model instead of median color detection
+            hair_result = hair_color_pipe(pil_image)
+            color_name = hair_result[0]['label']
+        else:
+            # Detect color normally
+            color_name = detect_color(frame, mask)
+
+        # Assign a random color for the mask overlay
         overlay_color = [random.randint(100, 255) for _ in range(3)]
-
-        # Apply the mask overlay
         mask_overlay[mask > 0] = overlay_color
 
         detected_items.append(f"{label} ({color_name})")
@@ -92,7 +105,7 @@ while True:
         print(f"Detected: {text}\n")
 
     # Show segmented results
-    cv2.imshow("Clothing Segmentation", segmented_frame)
+    cv2.imshow("Clothing & Hair Segmentation", segmented_frame)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
         break
